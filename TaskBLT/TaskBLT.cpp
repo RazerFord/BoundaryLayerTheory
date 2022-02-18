@@ -2,11 +2,15 @@
 
 using namespace std;
 
-
+void Tom(double* A, double* B, double* C, double* F);
+double** getArray(int nY, int nX);
+bool deleteArray(double**& arr, int nY);
 
 int main()
 {
-	/**Объект**/
+	setlocale(LC_ALL, "Russian");
+
+	/** Объект **/
 	//размеры образца по x, y
 	double xLenght = 1.0, yLenght = 0.5;
 	//количество областей по x
@@ -14,74 +18,104 @@ int main()
 	//количество областей по y
 	const int m = 3;
 	//количество узлов по x
-	const int nX = 100;
+	const int nX = 2000;
 	//количество узлов по y
-	const int nY = 8;
+	const int nY = 20000;
 
-	/**Препятствие**/
+	//double* ddd = new double[nX * nY]{ 0 };
+	//cout << ddd[2000 * 2000 - 1];
+	//cin.get();
+	double** psiN = getArray(nY, nX);
+	cout << psiN[nY - 1][nX - 1] << endl;
+	cin.get();
+	double** psi = getArray(nY, nX);
+	cout << psi[nY - 1][nX - 1] << endl;
+
+	/** Препятствие **/
 	//размеры препятствия по x, y
 	double xBarrierLenght = 0.2, yBarrierLenght = 0.1;
 	//расстояние от препятствия от точки (0,0) /Это левый нижний угол/ по ОСИ X
 	double xDistancesToBarrier = 0.0;
 	//расстояние от препятствия от точки (0,0) /Это левый нижний угол/ по ОСИ Y
 	double yDistancesToBarrierDown = 0.2;
-	double yDistancesToBarrierUp = yLenght - yBarrierLenght - yDistancesToBarrierDown;
-	std::cout << yDistancesToBarrierUp << "    " << std::endl;
+	double yDistancesToBarrierUp = yBarrierLenght + yDistancesToBarrierDown;
 
-	/**Граничные условия**/
+	/** Граничные условия **/
 	/*
 	*нужно задать граничные условия
 	*/
 
+	//шаг по времени
+	const double dt = 0.01;
 	//шаг по x
 	double hx = xLenght / nX;
 	//шаг по y
 	double hy = yLenght / nY;
 
-	int correction = 0;
-
-	/**Разбиение на области по оси X**/
-	/*Первая область*/
-	//Количество узлов в первой области по X занимаемой барьером
-	int n_xDistancesToBarrier_1 = 0;
-	//Количество узлов в первой области по X
-	int nX1 = nX - static_cast<int>(xDistancesToBarrier / hx) - n_xDistancesToBarrier_1;
-	//Количество узлов в первой области по Y
-	int nY1 = static_cast<int>(yDistancesToBarrierDown / hy);
-	cout << "   nY1 = " << nY1 << "   nY1*h1 = " << nY1 * hy << std::endl;
-	if (nY1 * hy == yDistancesToBarrierDown) {
-		nY1 -= 1;
-		correction += 1;
-	}
-
-	/*Третья область*/
-	//Количество узлов в первой области по X занимаемой барьером
-	int n_xDistancesToBarrier_3 = 0;
-	//Количество узлов в первой области по X
-	int nX3 = nX - static_cast<int>(xDistancesToBarrier / hx) - n_xDistancesToBarrier_3;
-	//Количество узлов в первой области по Y
-	int nY3 = static_cast<int>(yDistancesToBarrierUp / hy);
-	cout << "   nY3 = " << nY3 << "   nY3*h3 = " << nY3 * hy << std::endl;
-	if (nY3 * hy == yDistancesToBarrierUp) {
-		nY3 -= 1;
-		correction += 1;
-	}
-
-	/*Вторая область*/
-	//Количество узлов в первой области по X занимаемой барьером
-	int n_xDistancesToBarrier_2 = static_cast<int>(xBarrierLenght / hx);
-	//Количество узлов в второй области по X
-	int nX2 = nX - static_cast<int>(xDistancesToBarrier / hx) - n_xDistancesToBarrier_2;
-	//Количество узлов в второй области по Y
-	int nY2 = static_cast<int>(yBarrierLenght / hy) + correction;
-
 	for (int i = 0; i <= nY; i++) {
-		std::cout << i * hy << std::endl;
+		cout << i << "  :=  " << i * hy << "    ";
+		int nXStart;
+		if (i * hy < yDistancesToBarrierDown) {
+			nXStart = static_cast<int>(xDistancesToBarrier / hx);
+			cout << "Первая область";
+		}
+		if (i * hy >= yDistancesToBarrierDown && i * hy <= yDistancesToBarrierUp) {
+			nXStart = static_cast<int>((xDistancesToBarrier + xBarrierLenght) / hx);
+			cout << "Вторая область";
+		}
+		if (i * hy > yDistancesToBarrierUp) {
+			nXStart = static_cast<int>(xDistancesToBarrier / hx);
+			cout << "Третья область";
+		}
+
+		cout << "\n/*** " << nXStart << ", " << nXStart * hx << " ***/\n\n";
+
+		//		double* A = new double[nX + 1 - nXStart];
+		//		double* B = new double[nX + 1 - nXStart];
+		//		double* C = new double[nX + 1 - nXStart];
+		//		double* F = new double[nX + 1 - nXStart];
+
+		for (int j = nXStart; j <= nX; j++) {
+			//			A[j - nXStart] = dt / pow(hx, 2);
+			//			B[j - nXStart] = -1.0 - dt / pow(hx, 2);
+			//			C[j - nXStart] = dt / pow(hx, 2);
+			//			F[j - nXStart] = -psi[i][j];
+		}
+
+		//		Tom(A, B, C, F);
 	}
 
-	cout << "nX1 = " << nX1 << "   nY1 = " << nY1 << "   nY1*h1 = " << nY1 * hy << std::endl;
-	cout << "nX2 = " << nX2 << "   nY2 = " << nY2 << "   nY2*h2 = " << nY2 * hy << std::endl;
-	cout << "nX3 = " << nX3 << "   nY3 = " << nY3 << "   nY3*h3 = " << nY3 * hy << std::endl;
-	cout << nY1 * hy + nY2 * hy + nY3 * hy << endl;
+	deleteArray(psiN, nY);
+	deleteArray(psi, nY);
+
 	return 0;
 }
+
+void Tom(double* A, double* B, double* C, double* F)
+{
+
+}
+
+double** getArray(int nY, int nX)
+{
+	double** arr = new double* [nY + 1];
+	for (int i = 0; i <= nY; i++) {
+		arr[i] = new double[nX + 1]{ 0 };
+	}
+	return arr;
+}
+
+bool deleteArray(double**& arr, int nY)
+{
+	try {
+		for (int i = 0; i <= nY; i++) {
+			delete[] arr[i];
+		}
+		delete[] arr;
+		return true;
+	}
+	catch (exception) {
+		return false;
+	}
+}
+
