@@ -3,9 +3,10 @@
 
 using namespace std;
 
-void Tom(double* A, double* B, double* C, double* F, int n, double* Fun, int nAll);
+void Tom(double* A, double* B, double* C, double* F, int n, int nXStart, double* Fun, int nAll);
 double** getArray(int nY, int nX);
 bool deleteArray(double**& arr, int nY);
+void p();
 
 int main()
 {
@@ -19,9 +20,9 @@ int main()
 	//количество областей по y
 	const int m = 3;
 	//количество узлов по x
-	const int nX = 200;
+	const int nX = 10;
 	//количество узлов по y
-	const int nY = 50;
+	const int nY = 5;
 
 	double** psiN = getArray(nY + 1, nX + 1);
 	double** psi = getArray(nY + 1, nX + 1);
@@ -91,63 +92,113 @@ int main()
 		C[size] = 0.0; //???
 		F[size] = 100.0; //???
 
-		Tom(A, B, C, F, size, psi[i], nX);
+		Tom(A, B, C, F, size, nXStart, psi[i], nX);
+		delete[] A, B, C, F;
 	}
 
 	for (int i = 0; i <= nY; i++) {
 		for (int j = 0; j <= nX; j++) {
-			//cout << psi[i][j] << "   " << hx * j << endl;;
-			out << hx * j << "   " << psi[i][j] << endl;;
+			cout << psi[i][j] << "   ";
 		}
-		break;
 		cout << endl;
 	}
-	cin.get();
+
+	for (int i = 0; i <= nY; i++)
+		cout << i << "  " << i * hy << endl;
 
 	//прогонка по Y
-	for (int i = 0; i <= nX; i++) {//Фиг пойми что тут ставить i=0 или i=1. Ну с 0 работает неплохо
+	for (int j = 0; j <= nX; j++) {//Фиг пойми что тут ставить i=0 или i=1. Ну с 0 работает неплохо
 
-		int nXStart;
+		int nYStart, nYEnd, size;
+		double* A = new double[nY + 1]{ 0 };
+		double* B = new double[nY + 1]{ 0 };
+		double* C = new double[nY + 1]{ 0 };
+		double* F = new double[nY + 1]{ 0 };
 
-		if (i * hy < yDistancesToBarrierDown) {
-			nXStart = static_cast<int>(xDistancesToBarrier / hx);
-			//cout << "Первая область";
-		}
-		if (i * hy >= yDistancesToBarrierDown && i * hy <= yDistancesToBarrierUp) {
-			nXStart = static_cast<int>((xDistancesToBarrier + xBarrierLenght) / hx);
-			//cout << "Вторая область";
-		}
-		if (i * hy > yDistancesToBarrierUp) {
-			nXStart = static_cast<int>(xDistancesToBarrier / hx);
-			//cout << "Третья область";
+		double* psiN = new double[nY + 1];
+
+		for (int k = 0; k <= nY; k++) {
+			psiN[k] = psi[k][j];
 		}
 
-		int size = nX - nXStart;
+		if (j * hx <= xBarrierLenght + xDistancesToBarrier) {
+			nYStart = 0;
+			nYEnd = static_cast<int>(yDistancesToBarrierDown / hy);
+			size = nYEnd - nYStart;
 
-		double* A = new double[size + 1];
-		double* B = new double[size + 1];
-		double* C = new double[size + 1];
-		double* F = new double[size + 1];
+			A[0] = 0.0; //???
+			B[0] = 1.0; //???
+			C[0] = 0.0; //???
+			F[0] = 0.0; //???
 
-		A[0] = 0.0; //???
-		B[0] = 1.0; //???
-		C[0] = 0.0; //???
-		F[0] = 1000.0; //???
+			for (int i = 0; i < size; i++) {
+				A[i] = dt / pow(hy, 2);
+				B[i] = -1.0 - dt / pow(hy, 2);
+				C[i] = dt / pow(hy, 2);
+				F[i] = -psi[i][j];
+			}
 
-		for (int j = 1; j < size; j++) {
-			A[j] = dt / pow(hx, 2);
-			B[j] = -1.0 - dt / pow(hx, 2);
-			C[j] = dt / pow(hx, 2);
-			F[j] = -psi[i][j];
+			A[size] = 0.0; //???
+			B[size] = 1.0; //???
+			C[size] = 0.0; //???
+			F[size] = 1.0; //???
+
+			Tom(A, B, C, F, size, nYStart, psiN, nY);
+		}
+		if (j * hx <= xBarrierLenght + xDistancesToBarrier) {
+			nYStart = static_cast<int>((yDistancesToBarrierDown + yBarrierLenght) / hy);
+			nYEnd = nY;
+			size = nYEnd - nYStart;
+
+			A[0] = 0.0; //???
+			B[0] = 1.0; //???
+			C[0] = 0.0; //???
+			F[0] = 0.0; //???
+
+			for (int i = 0; i < size; i++) {
+				A[i] = dt / pow(hy, 2);
+				B[i] = -1.0 - dt / pow(hy, 2);
+				C[i] = dt / pow(hy, 2);
+				F[i] = -psi[i][j];
+			}
+
+			A[size] = 0.0; //???
+			B[size] = 1.0; //???
+			C[size] = 0.0; //???
+			F[size] = 1.0; //???
+
+			Tom(A, B, C, F, size, nYStart, psiN, nY);
+		}
+		if (j * hx > xBarrierLenght + xDistancesToBarrier) {
+			nYStart = 0;
+			nYEnd = nY;
+			size = nYEnd - nYStart;
+
+			A[0] = 0.0; //???
+			B[0] = 1.0; //???
+			C[0] = 0.0; //???
+			F[0] = 0.0; //???
+
+			for (int i = 0; i < size; i++) {
+				A[i] = dt / pow(hy, 2);
+				B[i] = -1.0 - dt / pow(hy, 2);
+				C[i] = dt / pow(hy, 2);
+				F[i] = -psi[i][j];
+			}
+
+			A[size] = 0.0; //???
+			B[size] = 1.0; //???
+			C[size] = 0.0; //???
+			F[size] = 1.0; //???
+
+			Tom(A, B, C, F, size, nYStart, psiN, nY);
 		}
 
-		A[size] = 0.0; //???
-		B[size] = 1.0; //???
-		C[size] = 0.0; //???
-		F[size] = 1001.0; //???
-
-		Tom(A, B, C, F, size, psi[i], nX);
+		for (int k = 0; k <= nY; k++) {
+			psi[k][j] = psiN[k];
+		}
 	}
+
 
 
 	for (int i = 0; i <= nY; i++) {
@@ -164,7 +215,12 @@ int main()
 	return 0;
 }
 
-void Tom(double* A, double* B, double* C, double* F, int n, double* Fun, int nAll)
+void p()
+{
+
+}
+
+void Tom(double* A, double* B, double* C, double* F, int n, int nXStart, double* Fun, int nAll)
 {
 	double* ai = new double[n] {0};
 	double* bi = new double[n] {0};
@@ -180,7 +236,6 @@ void Tom(double* A, double* B, double* C, double* F, int n, double* Fun, int nAl
 
 	Fun[nAll] = (F[n] - A[n] * bi[n - 1]) / (A[n] * ai[n - 1] + B[n]);
 
-	int nXStart = nAll - n;
 	//cout << nXStart + n << "   " << nAll << endl; cin.get();
 	//cout << Fun[nAll] << "   " << Fun[nXStart + n] << "   " << A[n] << endl;
 	//int size = nX - nXStart;
@@ -189,6 +244,7 @@ void Tom(double* A, double* B, double* C, double* F, int n, double* Fun, int nAl
 		//cout << Fun[nXStart + i] << "   " << A[i] << endl;
 		Fun[nXStart + i] = ai[i] * Fun[nXStart + i + 1] + bi[i];
 	}
+	delete[] ai, bi;
 }
 
 double** getArray(int nY, int nX)
@@ -213,4 +269,3 @@ bool deleteArray(double**& arr, int nY)
 		return false;
 	}
 }
-
