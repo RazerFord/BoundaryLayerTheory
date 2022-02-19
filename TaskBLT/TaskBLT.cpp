@@ -1,4 +1,5 @@
 ﻿#include <iostream>
+#include <fstream>
 
 using namespace std;
 
@@ -18,9 +19,9 @@ int main()
 	//количество областей по y
 	const int m = 3;
 	//количество узлов по x
-	const int nX = 10;
+	const int nX = 200;
 	//количество узлов по y
-	const int nY = 5;
+	const int nY = 50;
 
 	double** psiN = getArray(nY + 1, nX + 1);
 	double** psi = getArray(nY + 1, nX + 1);
@@ -47,7 +48,64 @@ int main()
 	//шаг по y
 	double hy = yLenght / nY;
 
-	for (int i = 0; i <= nY; i++) {//Фиг пойми что тут ставить i=0 или i=1
+	ofstream out("D://datka.txt");
+	//прогонка по X
+	for (int i = 0; i <= nY; i++) {//Фиг пойми что тут ставить i=0 или i=1. Ну с 0 работает неплохо
+
+		int nXStart;
+
+		if (i * hy < yDistancesToBarrierDown) {
+			nXStart = static_cast<int>(xDistancesToBarrier / hx);
+			//cout << "Первая область";
+		}
+		if (i * hy >= yDistancesToBarrierDown && i * hy <= yDistancesToBarrierUp) {
+			nXStart = static_cast<int>((xDistancesToBarrier + xBarrierLenght) / hx);
+			//cout << "Вторая область";
+		}
+		if (i * hy > yDistancesToBarrierUp) {
+			nXStart = static_cast<int>(xDistancesToBarrier / hx);
+			//cout << "Третья область";
+		}
+
+		int size = nX - nXStart;
+
+		double* A = new double[size + 1];
+		double* B = new double[size + 1];
+		double* C = new double[size + 1];
+		double* F = new double[size + 1];
+
+		A[0] = 0.0; //???
+		B[0] = 1.0; //???
+		C[0] = 0.0; //???
+		F[0] = 0.0; //???
+
+		for (int j = 1; j < size; j++) {
+			A[j] = dt / pow(hx, 2);
+			B[j] = -1.0 - 2.0 * dt / pow(hx, 2);
+			C[j] = dt / pow(hx, 2);
+			F[j] = -psi[i][j];
+		}
+
+		A[size] = 0.0; //???
+		B[size] = 1.0; //???
+		C[size] = 0.0; //???
+		F[size] = 100.0; //???
+
+		Tom(A, B, C, F, size, psi[i], nX);
+	}
+
+	for (int i = 0; i <= nY; i++) {
+		for (int j = 0; j <= nX; j++) {
+			//cout << psi[i][j] << "   " << hx * j << endl;;
+			out << hx * j << "   " << psi[i][j] << endl;;
+		}
+		break;
+		cout << endl;
+	}
+	cin.get();
+
+	//прогонка по Y
+	for (int i = 0; i <= nX; i++) {//Фиг пойми что тут ставить i=0 или i=1. Ну с 0 работает неплохо
 
 		int nXStart;
 
@@ -83,13 +141,10 @@ int main()
 			F[j] = -psi[i][j];
 		}
 
-		A[size] = 1.0; //???
-		B[size] = -1.0; //???
+		A[size] = 0.0; //???
+		B[size] = 1.0; //???
 		C[size] = 0.0; //???
-		F[size] = 0.0; //???
-
-		psi[i][nX] = 1001;
-		psi[i][nXStart] = 1000;
+		F[size] = 1001.0; //???
 
 		Tom(A, B, C, F, size, psi[i], nX);
 	}
@@ -104,6 +159,7 @@ int main()
 
 	deleteArray(psiN, nY);
 	deleteArray(psi, nY);
+	out.close();
 
 	return 0;
 }
@@ -122,12 +178,7 @@ void Tom(double* A, double* B, double* C, double* F, int n, double* Fun, int nAl
 		//	cout << bi[i] << endl; cin.get();
 	}
 
-	//	for (int i = 0; i < n; i++)
-	//		cout << bi[i] << "   "; cin.get();
-
-
-
-		//Fun[nAll] = (F[nAll] - A[n] * bi[n - 1]) / (A[n] * ai[n - 1] + B[n]);
+	Fun[nAll] = (F[n] - A[n] * bi[n - 1]) / (A[n] * ai[n - 1] + B[n]);
 
 	int nXStart = nAll - n;
 	//cout << nXStart + n << "   " << nAll << endl; cin.get();
@@ -138,7 +189,6 @@ void Tom(double* A, double* B, double* C, double* F, int n, double* Fun, int nAl
 		//cout << Fun[nXStart + i] << "   " << A[i] << endl;
 		Fun[nXStart + i] = ai[i] * Fun[nXStart + i + 1] + bi[i];
 	}
-	//cin.get();
 }
 
 double** getArray(int nY, int nX)
