@@ -6,7 +6,6 @@ using namespace std;
 void Tom(double* A, double* B, double* C, double* F, int n, int nXStart, double* Fun, int nAll);
 double** getArray(int nY, int nX);
 bool deleteArray(double**& arr, int nY);
-void p();
 
 int main()
 {
@@ -20,9 +19,9 @@ int main()
 	//количество областей по y
 	const int m = 3;
 	//количество узлов по x
-	const int nX = 10;
+	const int nX = 15;
 	//количество узлов по y
-	const int nY = 5;
+	const int nY = 10;
 
 	double** psiN = getArray(nY + 1, nX + 1);
 	double** psi = getArray(nY + 1, nX + 1);
@@ -51,7 +50,7 @@ int main()
 
 	ofstream out("D://datka.txt");
 	//прогонка по X
-	for (int i = 0; i <= nY; i++) {//Фиг пойми что тут ставить i=0 или i=1. Ну с 0 работает неплохо
+	for (int i = 0; i <= nY; i++) {
 
 		int nXStart;
 
@@ -95,7 +94,6 @@ int main()
 		Tom(A, B, C, F, size, nXStart, psi[i], nX);
 		delete[] A, B, C, F;
 	}
-
 	for (int i = 0; i <= nY; i++) {
 		for (int j = 0; j <= nX; j++) {
 			cout << psi[i][j] << "   ";
@@ -103,11 +101,12 @@ int main()
 		cout << endl;
 	}
 
+
 	for (int i = 0; i <= nY; i++)
 		cout << i << "  " << i * hy << endl;
-
+	
 	//прогонка по Y
-	for (int j = 0; j <= nX; j++) {//Фиг пойми что тут ставить i=0 или i=1. Ну с 0 работает неплохо
+	for (int j = 0; j <= nX; j++) {
 
 		int nYStart, nYEnd, size;
 		double* A = new double[nY + 1]{ 0 };
@@ -133,7 +132,7 @@ int main()
 
 			for (int i = 0; i < size; i++) {
 				A[i] = dt / pow(hy, 2);
-				B[i] = -1.0 - dt / pow(hy, 2);
+				B[i] = -1.0 - 2.0 * dt / pow(hy, 2);
 				C[i] = dt / pow(hy, 2);
 				F[i] = -psi[i][j];
 			}
@@ -153,11 +152,11 @@ int main()
 			A[0] = 0.0; //???
 			B[0] = 1.0; //???
 			C[0] = 0.0; //???
-			F[0] = 0.0; //???
+			F[0] = 1.0; //???
 
 			for (int i = 0; i < size; i++) {
 				A[i] = dt / pow(hy, 2);
-				B[i] = -1.0 - dt / pow(hy, 2);
+				B[i] = -1.0 - 2.0 * dt / pow(hy, 2);
 				C[i] = dt / pow(hy, 2);
 				F[i] = -psi[i][j];
 			}
@@ -181,7 +180,7 @@ int main()
 
 			for (int i = 0; i < size; i++) {
 				A[i] = dt / pow(hy, 2);
-				B[i] = -1.0 - dt / pow(hy, 2);
+				B[i] = -1.0 - 2.0 * dt / pow(hy, 2);
 				C[i] = dt / pow(hy, 2);
 				F[i] = -psi[i][j];
 			}
@@ -200,7 +199,6 @@ int main()
 	}
 
 
-
 	for (int i = 0; i <= nY; i++) {
 		for (int j = 0; j <= nX; j++) {
 			cout << psi[i][j] << "   ";
@@ -215,10 +213,6 @@ int main()
 	return 0;
 }
 
-void p()
-{
-
-}
 
 void Tom(double* A, double* B, double* C, double* F, int n, int nXStart, double* Fun, int nAll)
 {
