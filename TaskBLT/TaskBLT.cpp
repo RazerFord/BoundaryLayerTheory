@@ -20,9 +20,9 @@ int main()
 	//количество областей по y
 	const int m = 3;
 	//количество узлов по x
-	const int nX = 100;
+	const int nX = 10;
 	//количество узлов по y
-	const int nY = 120;
+	const int nY = 12;
 
 	double** psi = getArray(nY + 1, nX + 1);
 	double** swirl = getArray(nY + 1, nX + 1);
@@ -46,12 +46,12 @@ int main()
 	double hy = yLenght / nY;
 
 	borderConditions(psi, nY + 1, nX + 1, hy, hx, xBarrierLenght, yDistancesToBarrierDown, yDistancesToBarrierUp, xDistancesToBarrier, speedX, speedY);
-	//for (int i = nY; i >= 0; i--) {
-	//	for (int j = 0; j <= nX; j++) {
-	//		cout << psi[i][j] << "   \t";
-	//	}
-	//	cout << endl;
-	//}
+	for (int i = nY; i >= 0; i--) {
+		for (int j = 0; j <= nX; j++) {
+			cout << psi[i][j] << "   \t";
+		}
+		cout << endl;
+	}
 
 	int i1, i2, j1;
 
@@ -239,7 +239,7 @@ int main()
 		}
 
 		//Короче тут вычисляется скорость
-		for (int i = 1; i < nY; i++) {
+		for (int i = 1; i < i1; i++) {
 			for (int j = 1; j < nX; j++) {
 				speedX[i][j] = (psi[i + 1][j] - psi[i][j]) / hy;
 				speedY[i][j] = -(psi[i][j + 1] - psi[i][j]) / hx;
@@ -248,12 +248,23 @@ int main()
 			speedY[i][nX] = speedY[i][nX - 1];
 		}
 
-		//Граничные условия для функции вихря
-		//for (int i = 0; i <= nY; i++) {
-		//	for (int j = 0; j <= nX; j++) {
+		for (int i = i1; i < i2; i++) {
+			for (int j = j1 + 1; j < nX; j++) {
+				speedX[i][j] = (psi[i + 1][j] - psi[i][j]) / hy;
+				speedY[i][j] = -(psi[i][j + 1] - psi[i][j]) / hx;
+			}
+			speedX[i][nX] = speedX[i][nX - 1];
+			speedY[i][nX] = speedY[i][nX - 1];
+		}
 
-		//	}
-		//}
+		for (int i = i2; i < nY; i++) {
+			for (int j = 1; j < nX; j++) {
+				speedX[i][j] = (psi[i + 1][j] - psi[i][j]) / hy;
+				speedY[i][j] = -(psi[i][j + 1] - psi[i][j]) / hx;
+			}
+			speedX[i][nX] = speedX[i][nX - 1];
+			speedY[i][nX] = speedY[i][nX - 1];
+		}
 
 		//Прогонка для вихрей по X
 		//for (int i = 1; i < nY; i++) {
