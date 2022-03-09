@@ -20,9 +20,9 @@ int main()
 	//количество областей по y
 	const int m = 3;
 	//количество узлов по x
-	const int nX = 10;
+	const int nX = 100;
 	//количество узлов по y
-	const int nY = 12;
+	const int nY = 120;
 
 	double** psi = getArray(nY + 1, nX + 1);
 	double** swirl = getArray(nY + 1, nX + 1);
@@ -46,12 +46,12 @@ int main()
 	double hy = yLenght / nY;
 
 	borderConditions(psi, nY + 1, nX + 1, hy, hx, xBarrierLenght, yDistancesToBarrierDown, yDistancesToBarrierUp, xDistancesToBarrier, speedX, speedY);
-	for (int i = nY; i >= 0; i--) {
-		for (int j = 0; j <= nX; j++) {
-			cout << psi[i][j] << "   \t";
-		}
-		cout << endl;
-	}
+	//for (int i = nY; i >= 0; i--) {
+	//	for (int j = 0; j <= nX; j++) {
+	//		cout << psi[i][j] << "   \t";
+	//	}
+	//	cout << endl;
+	//}
 
 	int i1, i2, j1;
 
@@ -65,15 +65,15 @@ int main()
 	ofstream out("D://datka.dat");
 	double timer = 0.0;
 	int k = 0;
+	int max = std::max(nX, nY);
+	double* A = new double[max + 1];
+	double* B = new double[max + 1];
+	double* C = new double[max + 1];
+	double* F = new double[max + 1];
 	while (timer < 11) {
 		timer = dt * k++;
 		cout << timer << endl;
 
-		int max = std::max(nX, nY);
-		double* A = new double[max + 1];
-		double* B = new double[max + 1];
-		double* C = new double[max + 1];
-		double* F = new double[max + 1];
 
 		//прогонка по X 1 область
 		for (int i = 1; i < i1; i++) {
@@ -141,21 +141,16 @@ int main()
 			Tom(A, B, C, F, nX, 0, psi[i], nX);
 		}
 
-		//прогонка по Y
-		for (int j = 1; j < nX; j++) {
+		double* psiN = new double[nY + 1]{ 0 };
 
-			int nYStart, nYEnd, size;
-			double* A = new double[nY + 1]{ 0 };
-			double* B = new double[nY + 1]{ 0 };
-			double* C = new double[nY + 1]{ 0 };
-			double* F = new double[nY + 1]{ 0 };
+		//прогонка по Y 1 и 2 область
+		for (int j = 1; j <= j1; j++) {
 
-			double* psiN = new double[nY + 1]{ 0 };
 
 			for (int k = 0; k <= nY; k++) {
 				psiN[k] = psi[k][j];
 			}
-
+			int size, nYEnd, nYStart;
 			if (j * hx <= xBarrierLenght + xDistancesToBarrier) {
 				nYStart = 0;
 				nYEnd = static_cast<int>(yDistancesToBarrierDown / hy);
@@ -166,23 +161,19 @@ int main()
 				C[0] = 0.0;
 				F[0] = psi[0][j];
 
-				for (int i = 1; i < size; i++) {
+				for (int i = 1; i < i1; i++) {
 					A[i] = dt / pow(hy, 2);
 					B[i] = -1.0 - 2.0 * dt / pow(hy, 2);
 					C[i] = dt / pow(hy, 2);
-					F[i] = -psi[i + nYStart][j];
+					F[i] = -psi[i][j];
 				}
 
-				A[size] = 0.0;
-				B[size] = 1.0;
-				C[size] = 0.0;
-				F[size] = psi[size][j];
+				A[i1] = 0.0;
+				B[i1] = 1.0;
+				C[i1] = 0.0;
+				F[i1] = psi[i1][j];
 
-				Tom(A, B, C, F, size, nYStart, psiN, nYEnd);
-
-				for (int k = nYStart; k <= nYEnd; k++) {
-					psi[k][j] = psiN[k];
-				}
+				Tom(A, B, C, F, i1, 0, psiN, i1);
 
 				nYStart = static_cast<int>(yDistancesToBarrierUp / hy);
 				nYEnd = nY;
@@ -191,66 +182,56 @@ int main()
 				A[0] = 0.0;
 				B[0] = 1.0;
 				C[0] = 0.0;
-				F[0] = psi[nYStart][j];
+				F[0] = psi[i2 - 1][j];
 
-				for (int i = 1; i < size; i++) {
+				for (int i = 1; i < nYEnd - i2 + 1; i++) {
 					A[i] = dt / pow(hy, 2);
 					B[i] = -1.0 - 2.0 * dt / pow(hy, 2);
 					C[i] = dt / pow(hy, 2);
-					F[i] = -psi[i + nYStart][j];
+					F[i] = -psi[i + i2 - 1][j];
 				}
 
-				A[size] = 0.0;
-				B[size] = 1.0;
-				C[size] = 0.0;
-				F[size] = psi[nYEnd][j];
+				A[nYEnd - i2 + 1] = 0.0;
+				B[nYEnd - i2 + 1] = 1.0;
+				C[nYEnd - i2 + 1] = 0.0;
+				F[nYEnd - i2 + 1] = psi[nYEnd][j];
 
-				Tom(A, B, C, F, size, nYStart, psiN, nYEnd);
+				Tom(A, B, C, F, nYEnd - i2 + 1, i2 - 1, psiN, nYEnd);
 
-				for (int k = nYStart; k <= nYEnd; k++) {
+				for (int k = 0; k <= nYEnd; k++) {
 					psi[k][j] = psiN[k];
 				}
 			}
-			if (j * hx > xBarrierLenght + xDistancesToBarrier) {
-				nYStart = 0;
-				nYEnd = nY;
-				size = nYEnd - nYStart;
-
-				A[0] = 0.0;
-				B[0] = 1.0;
-				C[0] = 0.0;
-				F[0] = psi[nYStart][j];
-
-				for (int i = 1; i < size; i++) {
-					A[i] = dt / pow(hy, 2);
-					B[i] = -1.0 - 2.0 * dt / pow(hy, 2);
-					C[i] = dt / pow(hy, 2);
-					F[i] = -psi[i + nYStart][j];
-				}
-
-				A[size] = 0.0;
-				B[size] = 1.0;
-				C[size] = 0.0;
-				F[size] = psi[nYEnd][j];
-
-				Tom(A, B, C, F, size, nYStart, psiN, nYEnd);
-
-				for (int k = nYStart; k <= nYEnd; k++) {
-					psi[k][j] = psiN[k];
-				}
-			}
-
-			delete[] A;
-			delete[] B;
-			delete[] C;
-			delete[] F;
-			delete[] psiN;
 		}
 
-		delete[] A;
-		delete[] B;
-		delete[] C;
-		delete[] F;
+		//прогонка по Y 3 область
+		for (int j = j1 + 1; j < nX; j++) {
+			
+			A[0] = 0.0;
+			B[0] = 1.0;
+			C[0] = 0.0;
+			F[0] = psi[0][j];
+
+			for (int i = 1; i < nY; i++) {
+				A[i] = dt / pow(hy, 2);
+				B[i] = -1.0 - 2.0 * dt / pow(hy, 2);
+				C[i] = dt / pow(hy, 2);
+				F[i] = -psi[i][j];
+			}
+
+			A[nY] = 0.0;
+			B[nY] = 1.0;
+			C[nY] = 0.0;
+			F[nY] = psi[nY][j];
+
+			Tom(A, B, C, F, nY, 0, psiN, nY);
+
+			for (int k = 0; k <= nY; k++) {
+				psi[k][j] = psiN[k];
+			}
+		}
+
+		delete[] psiN;
 
 		for (int i = 1; i < nY; i++)
 		{
@@ -321,6 +302,11 @@ int main()
 		//	delete[] F;
 		//}
 	}
+	delete[] A;
+	delete[] B;
+	delete[] C;
+	delete[] F;
+
 	cout << "finish \n";
 
 	for (int i = nY; i >= 0; i--) {
