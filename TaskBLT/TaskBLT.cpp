@@ -6,11 +6,14 @@ using namespace std;
 void Tom(double* A, double* B, double* C, double* F, int n, int nXStart, double* Fun, int nAll);
 double** getArray(int nY, int nX);
 bool deleteArray(double**& arr, int nY);
-void borderConditions(double** arr, int nY, int nX, double hy, double hx, double xBarrierLenght, double yDistancesToBarrierDown, double yDistancesToBarrierUp, double xDistancesToBarrier, double** speedX, double** speedY);
+void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, double xBarrierLenght, double yDistancesToBarrierDown, double yDistancesToBarrierUp, double xDistancesToBarrier, double** speedX, double** speedY);
 
 int main()
 {
 	setlocale(LC_ALL, "Russian");
+
+	//число Рейнольдса
+	double Re = 1.0;
 
 	/** Объект **/
 	//размеры образца по x, y
@@ -20,12 +23,17 @@ int main()
 	//количество областей по y
 	const int m = 3;
 	//количество узлов по x
-	const int nX = 10;
+	const int nX = 100;
 	//количество узлов по y
-	const int nY = 12;
+	int nY = 125;
+	int balance = nY % 3;
+	if (balance) nY += (m - balance);
+
+	cout << "Количество узлов по x: " << nX << endl;
+	cout << "Количество узлов по y: " << nY << endl;
 
 	double** psi = getArray(nY + 1, nX + 1);
-	double** swirl = getArray(nY + 1, nX + 1);
+	double** omega = getArray(nY + 1, nX + 1);
 	double** speedX = getArray(nY + 1, nX + 1);
 	double** speedY = getArray(nY + 1, nX + 1);
 
@@ -45,7 +53,7 @@ int main()
 	//шаг по y
 	double hy = yLenght / nY;
 
-	borderConditions(psi, nY + 1, nX + 1, hy, hx, xBarrierLenght, yDistancesToBarrierDown, yDistancesToBarrierUp, xDistancesToBarrier, speedX, speedY);
+	borderConditionsPsi(psi, nY + 1, nX + 1, hy, hx, xBarrierLenght, yDistancesToBarrierDown, yDistancesToBarrierUp, xDistancesToBarrier, speedX, speedY);
 	for (int i = nY; i >= 0; i--) {
 		for (int j = 0; j <= nX; j++) {
 			cout << psi[i][j] << "   \t";
@@ -86,7 +94,7 @@ int main()
 				A[j] = dt / pow(hx, 2);
 				B[j] = -1.0 - 2.0 * dt / pow(hx, 2);
 				C[j] = dt / pow(hx, 2);
-				F[j] = -psi[i][j] - dt * swirl[i][j];
+				F[j] = -psi[i][j] + dt * omega[i][j];
 			}
 
 			A[nX] = -1.0;
@@ -108,7 +116,7 @@ int main()
 				A[j] = dt / pow(hx, 2);
 				B[j] = -1.0 - 2.0 * dt / pow(hx, 2);
 				C[j] = dt / pow(hx, 2);
-				F[j] = -psi[i][j + j1] - dt * swirl[i][j + j1];
+				F[j] = -psi[i][j + j1] + dt * omega[i][j + j1];
 			}
 
 			A[nX - j1] = -1.0;
@@ -130,7 +138,7 @@ int main()
 				A[j] = dt / pow(hx, 2);
 				B[j] = -1.0 - 2.0 * dt / pow(hx, 2);
 				C[j] = dt / pow(hx, 2);
-				F[j] = -psi[i][j] - dt * swirl[i][j];
+				F[j] = -psi[i][j] + dt * omega[i][j];
 			}
 
 			A[nX] = -1.0;
@@ -150,11 +158,8 @@ int main()
 			for (int k = 0; k <= nY; k++) {
 				psiN[k] = psi[k][j];
 			}
-			int size, nYEnd, nYStart;
+
 			if (j * hx <= xBarrierLenght + xDistancesToBarrier) {
-				nYStart = 0;
-				nYEnd = static_cast<int>(yDistancesToBarrierDown / hy);
-				size = nYEnd - nYStart;
 
 				A[0] = 0.0;
 				B[0] = 1.0;
@@ -175,30 +180,26 @@ int main()
 
 				Tom(A, B, C, F, i1, 0, psiN, i1);
 
-				nYStart = static_cast<int>(yDistancesToBarrierUp / hy);
-				nYEnd = nY;
-				size = nYEnd - nYStart;
-
 				A[0] = 0.0;
 				B[0] = 1.0;
 				C[0] = 0.0;
 				F[0] = psi[i2 - 1][j];
 
-				for (int i = 1; i < nYEnd - i2 + 1; i++) {
+				for (int i = 1; i < nY - i2 + 1; i++) {
 					A[i] = dt / pow(hy, 2);
 					B[i] = -1.0 - 2.0 * dt / pow(hy, 2);
 					C[i] = dt / pow(hy, 2);
 					F[i] = -psi[i + i2 - 1][j];
 				}
 
-				A[nYEnd - i2 + 1] = 0.0;
-				B[nYEnd - i2 + 1] = 1.0;
-				C[nYEnd - i2 + 1] = 0.0;
-				F[nYEnd - i2 + 1] = psi[nYEnd][j];
+				A[nY - i2 + 1] = 0.0;
+				B[nY - i2 + 1] = 1.0;
+				C[nY - i2 + 1] = 0.0;
+				F[nY - i2 + 1] = psi[nY][j];
 
-				Tom(A, B, C, F, nYEnd - i2 + 1, i2 - 1, psiN, nYEnd);
+				Tom(A, B, C, F, nY - i2 + 1, i2 - 1, psiN, nY);
 
-				for (int k = 0; k <= nYEnd; k++) {
+				for (int k = 0; k <= nY; k++) {
 					psi[k][j] = psiN[k];
 				}
 			}
@@ -206,7 +207,7 @@ int main()
 
 		//прогонка по Y 3 область
 		for (int j = j1 + 1; j < nX; j++) {
-			
+
 			A[0] = 0.0;
 			B[0] = 1.0;
 			C[0] = 0.0;
@@ -231,14 +232,12 @@ int main()
 			}
 		}
 
-		delete[] psiN;
-
 		for (int i = 1; i < nY; i++)
 		{
 			psi[i][nX] = psi[i][nX - 1];
 		}
 
-		//Короче тут вычисляется скорость
+		//Вычисления скорости
 		for (int i = 1; i < i1; i++) {
 			for (int j = 1; j < nX; j++) {
 				speedX[i][j] = (psi[i + 1][j] - psi[i][j]) / hy;
@@ -266,52 +265,164 @@ int main()
 			speedY[i][nX] = speedY[i][nX - 1];
 		}
 
-		//Прогонка для вихрей по X
-		//for (int i = 1; i < nY; i++) {
+		////прогонка по X 1 область для вихрей
+		//for (int i = 1; i < i1; i++) {
+		//	A[0] = 0.0;
+		//	B[0] = 1.0;
+		//	C[0] = 0.0;
+		//	F[0] = 0.0;
 
-		//	int nXStart;
-
-		//	if (i * hy < yDistancesToBarrierDown) {
-		//		nXStart = static_cast<int>(xDistancesToBarrier / hx);
+		//	for (int j = 1; j < nX; j++) {
+		//		A[j] = -dt * (abs(speedX[i][j]) + speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
+		//		B[j] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * pow(hx, 2));
+		//		C[j] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
+		//		F[j] = omega[i][j];
 		//	}
-		//	if (i * hy >= yDistancesToBarrierDown && i * hy <= yDistancesToBarrierUp) {
-		//		nXStart = static_cast<int>((xDistancesToBarrier + xBarrierLenght) / hx);
-		//	}
-		//	if (i * hy > yDistancesToBarrierUp) {
-		//		nXStart = static_cast<int>(xDistancesToBarrier / hx);
+
+		//	A[nX] = -1.0;
+		//	B[nX] = 1.0;
+		//	C[nX] = 0.0;
+		//	F[nX] = 0.0;
+
+		//	Tom(A, B, C, F, nX, 0, omega[i], nX);
+		//}
+
+		////прогонка по X 2 область для вихрей
+		//for (int i = i1; i < i2; i++) {
+		//	A[0] = 0.0;
+		//	B[0] = 1.0;
+		//	C[0] = 0.0;
+		//	F[0] = 2.0 * (psi[i][j1 + 1] - psi[i][j1]) / pow(hx, 2);
+		//	
+		//	for (int j = j1 + 1; j < nX; j++) {
+		//		A[j - j1] = -dt * (abs(speedX[i][j]) + speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
+		//		B[j - j1] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * pow(hx, 2));
+		//		C[j - j1] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
+		//		F[j - j1] = omega[i][j];
 		//	}
 
-		//	int size = nX - nXStart;
+		//	A[nX - j1] = -1.0;
+		//	B[nX - j1] = 1.0;
+		//	C[nX - j1] = 0.0;
+		//	F[nX - j1] = 0.0;
 
-		//	double* A = new double[size + 1];
-		//	double* B = new double[size + 1];
-		//	double* C = new double[size + 1];
-		//	double* F = new double[size + 1];
+		//	Tom(A, B, C, F, nX - j1, j1, omega[i], nX);
+		//}
+		////for (int i = nY; i >= 0; i--) {
+		////	for (int j = 0; j <= nX; j++) {
+		////		cout << omega[i][j] << "   ";
+		////	}
+		////	cout << endl;
+		////}cin.get();
+		////прогонка по X 3 область для вихрей
+		//for (int i = i2; i < nY; i++) {
+		//	A[0] = 0.0;
+		//	B[0] = 1.0;
+		//	C[0] = 0.0;
+		//	F[0] = 0.0;
+
+		//	for (int j = 1; j < nX; j++) {
+		//		A[j] = -dt * (abs(speedX[i][j]) + speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
+		//		B[j] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * pow(hx, 2));
+		//		C[j] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
+		//		F[j] = omega[i][j];
+		//	}
+
+		//	A[nX] = -1.0;
+		//	B[nX] = 1.0;
+		//	C[nX] = 0.0;
+		//	F[nX] = 0.0;
+
+		//	Tom(A, B, C, F, nX, 0, omega[i], nX);
+		//}
+
+		////прогонка по Y 1 и 2 область для вихрей
+		//for (int j = 1; j <= j1; j++) {
+
+
+		//	for (int k = 0; k <= nY; k++) {
+		//		psiN[k] = omega[k][j];
+		//	}
+
+		//	if (j * hx <= xBarrierLenght + xDistancesToBarrier) {
+
+		//		A[0] = 0.0;
+		//		B[0] = 1.0;
+		//		C[0] = 0.0;
+		//		F[0] = 2.0 * (psi[1][j] - psi[0][j]) / pow(hy, 2);
+
+		//		for (int i = 1; i < i1; i++) {
+		//			A[i] = -dt * (abs(speedY[i][j]) + speedY[i][j]) / (2.0 * hy) - dt / (Re * pow(hy, 2));
+		//			B[i] = 1.0 + dt * abs(speedY[i][j]) / hy + 2.0 * dt / (Re * pow(hy, 2));
+		//			C[i] = -dt * (abs(speedY[i][j]) - speedY[i][j]) / (2.0 * hy) - dt / (Re * pow(hy, 2));
+		//			F[i] = omega[i][j];
+		//		}
+
+		//		A[i1] = 0.0;
+		//		B[i1] = 1.0;
+		//		C[i1] = 0.0;
+		//		F[i1] = 2.0 * (psi[i1][j] - psi[i1 - 1][j]) / pow(hy, 2);
+
+		//		Tom(A, B, C, F, i1, 0, psiN, i1);
+
+		//		A[0] = 0.0;
+		//		B[0] = 1.0;
+		//		C[0] = 0.0;
+		//		F[0] = 2.0 * (psi[i2 + 1][j] - psi[i2][j]) / pow(hy, 2);
+
+		//		for (int i = i2; i < nY; i++) {
+		//			A[i - i2 + 1] = -dt * (abs(speedY[i][j]) + speedY[i][j]) / (2.0 * hy) - dt / (Re * pow(hy, 2));
+		//			B[i - i2 + 1] = 1.0 + dt * abs(speedY[i][j]) / hy + 2.0 * dt / (Re * pow(hy, 2));
+		//			C[i - i2 + 1] = -dt * (abs(speedY[i][j]) - speedY[i][j]) / (2.0 * hy) - dt / (Re * pow(hy, 2));
+		//			F[i - i2 + 1] = omega[i][j];
+		//		}
+
+		//		A[nY - i2 + 1] = 0.0;
+		//		B[nY - i2 + 1] = 1.0;
+		//		C[nY - i2 + 1] = 0.0;
+		//		F[nY - i2 + 1] = 2.0 * (psi[nY][j] - psi[nY - 1][j]) / pow(hy, 2);
+
+		//		Tom(A, B, C, F, nY - i2 + 1, i2 - 1, psiN, nY);
+
+		//		for (int k = 0; k <= nY; k++) {
+		//			omega[k][j] = psiN[k];
+		//		}
+		//	}
+		//}
+
+		////прогонка по Y 3 область
+		//for (int j = j1 + 1; j < nX; j++) {
 
 		//	A[0] = 0.0;
 		//	B[0] = 1.0;
 		//	C[0] = 0.0;
-		//	F[0] = psi[i][nXStart];
+		//	F[0] = 2.0 * (psi[1][j] - psi[0][j]) / pow(hy, 2);
 
-		//	for (int j = 1; j < size; j++) {
-		//		A[j] = dt / pow(hx, 2);
-		//		B[j] = -1.0 - 2.0 * dt / pow(hx, 2);
-		//		C[j] = dt / pow(hx, 2);
-		//		F[j] = -psi[i][j + nXStart] - dt * swirl[i][j + nXStart];
+		//	for (int i = 1; i < nY; i++) {
+		//		A[i] = -dt * (abs(speedY[i][j]) + speedY[i][j]) / (2.0 * hy) - dt / (Re * pow(hy, 2));
+		//		B[i] = 1.0 + dt * abs(speedY[i][j]) / hy + 2.0 * dt / (Re * pow(hy, 2));
+		//		C[i] = -dt * (abs(speedY[i][j]) - speedY[i][j]) / (2.0 * hy) - dt / (Re * pow(hy, 2));
+		//		F[i] = omega[i][j];
 		//	}
 
-		//	A[size] = -1.0;
-		//	B[size] = 1.0;
-		//	C[size] = 0.0;
-		//	F[size] = 0.0;
+		//	A[nY] = 0.0;
+		//	B[nY] = 1.0;
+		//	C[nY] = 0.0;
+		//	F[nY] = 2.0 * (psi[nY][j] - psi[nY - 1][j]) / pow(hy, 2);
 
-		//	Tom(A, B, C, F, size, nXStart, psi[i], nX);
+		//	Tom(A, B, C, F, nY, 0, psiN, nY);
 
-		//	delete[] A;
-		//	delete[] B;
-		//	delete[] C;
-		//	delete[] F;
+		//	for (int k = 0; k <= nY; k++) {
+		//		psi[k][j] = psiN[k];
+		//	}
 		//}
+
+		delete[] psiN;
+
+		for (int i = 1; i < nY; i++)
+		{
+			omega[i][nX] = omega[i][nX - 1];
+		}
 	}
 	delete[] A;
 	delete[] B;
@@ -377,7 +488,7 @@ bool deleteArray(double**& arr, int nY)
 	}
 }
 
-void borderConditions(double** arr, int nY, int nX, double hy, double hx, double xBarrierLenght, double yDistancesToBarrierDown, double yDistancesToBarrierUp, double xDistancesToBarrier, double** speedX, double** speedY)
+void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, double xBarrierLenght, double yDistancesToBarrierDown, double yDistancesToBarrierUp, double xDistancesToBarrier, double** speedX, double** speedY)
 {
 	/** Граничные условия **/
 	//на левой границе
