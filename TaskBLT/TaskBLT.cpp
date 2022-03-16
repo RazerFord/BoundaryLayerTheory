@@ -21,10 +21,12 @@ int main()
 
 	//число Рейнольдса
 	double Re = 1.0;
+	//число Грасгофа
+	double Gr = 1.0;
 
 	/** Объект **/
 	//размеры образца по x, y
-	double xLenght = 3.0, yLenght = 3.0;
+	double xLenght = 5.0, yLenght = 3.0;
 	//количество областей по x
 	const int n = 3;
 	//количество областей по y
@@ -318,11 +320,6 @@ int main()
 				B[j] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * pow(hx, 2));
 				C[j] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
 				F[j] = omega[i][j];
-
-				/*A[j] = -dt * speedX[i][j] / (2.0 * hx) - dt / (Re * pow(hx, 2));
-				B[j] = 1.0 + 2.0 * dt / (Re * pow(hx, 2));
-				C[j] = dt * speedX[i][j] / (2.0 * hx) - dt / (Re * pow(hx, 2));
-				F[j] = omega[i][j];*/
 			}
 
 			A[nX] = -1.0;
@@ -345,11 +342,6 @@ int main()
 				B[j - j1] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * pow(hx, 2));
 				C[j - j1] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
 				F[j - j1] = omega[i][j];
-
-				/*A[j - j1] = -dt * speedX[i][j] / (2.0 * hx) - dt / (Re * pow(hx, 2));
-				B[j - j1] = 1.0 + 2.0 * dt / (Re * pow(hx, 2));
-				C[j - j1] = dt * speedX[i][j] / (2.0 * hx) - dt / (Re * pow(hx, 2));
-				F[j - j1] = omega[i][j];*/
 			}
 
 			A[nX - j1] = 1.0;
@@ -372,11 +364,6 @@ int main()
 				B[j] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * pow(hx, 2));
 				C[j] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
 				F[j] = omega[i][j];
-
-				/*A[j] = -dt * speedX[i][j] / (2.0 * hx) - dt / (Re * pow(hx, 2));
-				B[j] = 1.0 + 2.0 * dt / (Re * pow(hx, 2));
-				C[j] = dt * speedX[i][j] / (2.0 * hx) - dt / (Re * pow(hx, 2));
-				F[j] = omega[i][j];*/
 			}
 
 			A[nX] = 1.0;
@@ -405,11 +392,6 @@ int main()
 				B[i] = 1.0 + dt * abs(speedY[i][j]) / hy + 2.0 * dt / (Re * pow(hy, 2));
 				C[i] = -dt * (abs(speedY[i][j]) - speedY[i][j]) / (2.0 * hy) - dt / (Re * pow(hy, 2));
 				F[i] = omega[i][j];
-
-				/*A[i] = -dt * speedY[i][j] / (2.0 * hy) - dt / (Re * pow(hy, 2));
-				B[i] = 1.0  + 2.0 * dt / (Re * pow(hy, 2));
-				C[i] = dt * speedY[i][j] / (2.0 * hy) - dt / (Re * pow(hy, 2));
-				F[i] = omega[i][j];*/
 			}
 
 			A[i1] = 0.0;
@@ -429,11 +411,6 @@ int main()
 				B[i - i2 + 1] = 1.0 + dt * abs(speedY[i][j]) / hy + 2.0 * dt / (Re * pow(hy, 2));
 				C[i - i2 + 1] = -dt * (abs(speedY[i][j]) - speedY[i][j]) / (2.0 * hy) - dt / (Re * pow(hy, 2));
 				F[i - i2 + 1] = omega[i][j];
-
-			/*	A[i - i2 + 1] = -dt * speedY[i][j] / (2.0 * hy) - dt / (Re * pow(hy, 2));
-				B[i - i2 + 1] = 1.0 + 2.0 * dt / (Re * pow(hy, 2));
-				C[i - i2 + 1] = dt * speedY[i][j] / (2.0 * hy) - dt / (Re * pow(hy, 2));
-				F[i - i2 + 1] = omega[i][j];*/
 			}
 
 			A[nY - i2 + 1] = 0.0;
@@ -461,11 +438,6 @@ int main()
 				B[i] = 1.0 + dt * abs(speedY[i][j]) / hy + 2.0 * dt / (Re * pow(hy, 2));
 				C[i] = -dt * (abs(speedY[i][j]) - speedY[i][j]) / (2.0 * hy) - dt / (Re * pow(hy, 2));
 				F[i] = omega[i][j];
-
-				/*A[i] = -dt * speedY[i][j] / (2.0 * hy) - dt / (Re * pow(hy, 2));
-				B[i] = 1.0 + 2.0 * dt / (Re * pow(hy, 2));
-				C[i] = dt * speedY[i][j] / (2.0 * hy) - dt / (Re * pow(hy, 2));
-				F[i] = omega[i][j];*/
 			}
 
 			A[nY] = 0.0;
@@ -513,7 +485,7 @@ int main()
 
 	ofstream f1("D:\\speedX.dat");
 	for (int i = 0; i <= nY; i++) {
-		f1 << i * hy << " " << speedX[i][j1/2] << " " << speedX[i][nX/2] << " " << speedX[i][nX - 1] << endl;
+		f1 << i * hy << " " << speedX[i][j1 / 2] << " " << speedX[i][nX / 2] << " " << speedX[i][nX - 1] << endl;
 	}
 	f1.close();
 	return 0;
@@ -587,17 +559,17 @@ void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, dou
 		}
 		if (i * hy >= yDistancesToBarrierDown && i * hy <= yDistancesToBarrierUp) {
 			nXStart = static_cast<int>((xDistancesToBarrier + xBarrierLenght) / hx);
-			arr[i][nXStart] = yDistancesToBarrierDown;
+			arr[i][nXStart] = yDistancesToBarrierDown * Ux;
 			if (abs(i * hy - yDistancesToBarrierDown) < 0.0000001 || abs(i * hy - yDistancesToBarrierUp) < 0.0000001) {
 				for (int j = 0; j <= nXStart; j++) {
-					arr[i][j] = yDistancesToBarrierDown;
+					arr[i][j] = yDistancesToBarrierDown * Ux;
 				}
 			}
 		}
 		if (i * hy > yDistancesToBarrierUp) {
 			nXStart = static_cast<int>(xDistancesToBarrier / hx);
 
-			arr[i][nXStart] = Ux * (i * hy - yDistancesToBarrierUp) + yDistancesToBarrierDown;
+			arr[i][nXStart] = Ux * (i * hy - yDistancesToBarrierUp) + Ux * yDistancesToBarrierDown;
 		}
 	}
 
