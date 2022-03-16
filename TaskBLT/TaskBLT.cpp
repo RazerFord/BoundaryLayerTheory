@@ -13,7 +13,8 @@ using std::setprecision;
 void Tom(double* A, double* B, double* C, double* F, int n, int nXStart, double* Fun, int nAll);
 double** getArray(int nY, int nX);
 bool deleteArray(double**& arr, int nY);
-void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, double xBarrierLenght, double yDistancesToBarrierDown, double yDistancesToBarrierUp, double xDistancesToBarrier, double** speedX, double** speedY);
+void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, double xBarrierLenght, double yDistancesToBarrierDown, double yDistancesToBarrierUp, double xDistancesToBarrier, double** speedX, double** speedY, double** teta);
+double getMax(double** arr, int nY, int nX);
 
 int main()
 {
@@ -23,10 +24,12 @@ int main()
 	double Re = 1.0;
 	//число Грасгофа
 	double Gr = 1.0;
+	//число Прандтля
+	double Pr = 1.0;
 
 	/** Объект **/
 	//размеры образца по x, y
-	double xLenght = 5.0, yLenght = 3.0;
+	double xLenght = 3.0, yLenght = 3.0;
 	//количество областей по x
 	const int n = 3;
 	//количество областей по y
@@ -69,20 +72,26 @@ int main()
 
 	double** psi = getArray(nY + 1, nX + 1);
 	double** omega = getArray(nY + 1, nX + 1);
+	double** teta = getArray(nY + 1, nX + 1);
 	double** speedX = getArray(nY + 1, nX + 1);
 	double** speedY = getArray(nY + 1, nX + 1);
 
+	double** psi_n = getArray(nY + 1, nX + 1);
+	double** omega_n = getArray(nY + 1, nX + 1);
+	double** teta_n = getArray(nY + 1, nX + 1);
+
+
 	//шаг по времени
-	const double dt = 0.005;
+	const double dt = 0.001;
 	//шаг по x
 	hx = xLenght / nX;
 	//шаг по y
 	hy = yLenght / nY;
 	cin.get();
-	borderConditionsPsi(psi, nY + 1, nX + 1, hy, hx, xBarrierLenght, yDistancesToBarrierDown, yDistancesToBarrierUp, xDistancesToBarrier, speedX, speedY);
+	borderConditionsPsi(psi, nY + 1, nX + 1, hy, hx, xBarrierLenght, yDistancesToBarrierDown, yDistancesToBarrierUp, xDistancesToBarrier, speedX, speedY, teta);
 	for (int i = nY; i >= 0; i--) {
 		for (int j = 0; j <= nX; j++) {
-			cout << psi[i][j] << "   \t";
+			cout << teta[i][j] << "   \t";
 		}
 		cout << endl;
 	}
@@ -107,8 +116,15 @@ int main()
 	double* F = new double[max + 1];
 	while (timer < 10) {
 		timer = dt * k++;
-		cout << timer << endl;
+		cout << k << "   " << timer << "   ";
 
+		for (int i = 0; i <= nY; i++) {
+			for (int j = 0; j <= nX; j++) {
+				psi_n[i][j] = psi[i][j];
+				omega_n[i][j] = omega[i][j];
+				teta_n[i][j] = teta[i][j];
+			}
+		}
 
 		//прогонка по X 1 область
 		for (int i = 1; i < i1; i++) {
@@ -319,7 +335,7 @@ int main()
 				A[j] = -dt * (abs(speedX[i][j]) + speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
 				B[j] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * pow(hx, 2));
 				C[j] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
-				F[j] = omega[i][j];
+				F[j] = omega[i][j] - dt * Gr * (teta[i][j + 1] - teta[i][j - 1]) / (2.0 * hx * pow(Re, 2));
 			}
 
 			A[nX] = -1.0;
@@ -341,10 +357,10 @@ int main()
 				A[j - j1] = -dt * (abs(speedX[i][j]) + speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
 				B[j - j1] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * pow(hx, 2));
 				C[j - j1] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
-				F[j - j1] = omega[i][j];
+				F[j - j1] = omega[i][j] - dt * Gr * (teta[i][j + 1] - teta[i][j - 1]) / (2.0 * hx * pow(Re, 2));
 			}
 
-			A[nX - j1] = 1.0;
+			A[nX - j1] = -1.0;
 			B[nX - j1] = 1.0;
 			C[nX - j1] = 0.0;
 			F[nX - j1] = 0.0;
@@ -363,11 +379,11 @@ int main()
 				A[j] = -dt * (abs(speedX[i][j]) + speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
 				B[j] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * pow(hx, 2));
 				C[j] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * pow(hx, 2));
-				F[j] = omega[i][j];
+				F[j] = omega[i][j] - dt * Gr * (teta[i][j + 1] - teta[i][j - 1]) / (2.0 * hx * pow(Re, 2));
 			}
 
-			A[nX] = 1.0;
-			B[nX] = -1.0;
+			A[nX] = -1.0;
+			B[nX] = 1.0;
 			C[nX] = 0.0;
 			F[nX] = 0.0;
 
@@ -425,7 +441,7 @@ int main()
 			}
 		}
 
-		//прогонка по Y 3 область
+		//прогонка по Y 3 область для вихрей
 		for (int j = j1 + 1; j < nX; j++) {
 
 			A[0] = 0.0;
@@ -452,28 +468,202 @@ int main()
 			}
 		}
 
-		delete[] e;
-
 		for (int i = 0; i <= nY; i++)
 		{
 			omega[i][nX] = omega[i][nX - 1];
 		}
+
+		//прогонка по X 1 область для температуры
+		for (int i = 1; i < i1; i++) {
+			A[0] = 0.0;
+			B[0] = 1.0;
+			C[0] = 0.0;
+			F[0] = 0.0;
+
+			for (int j = 1; j < nX; j++) {
+				A[j] = -dt * (abs(speedX[i][j]) + speedX[i][j]) / (2.0 * hx) - dt / (Re * Pr * pow(hx, 2));
+				B[j] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * Pr * pow(hx, 2));
+				C[j] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * Pr * pow(hx, 2));
+				F[j] = teta[i][j];
+			}
+
+			A[nX] = -1.0;
+			B[nX] = 1.0;
+			C[nX] = 0.0;
+			F[nX] = 0.0;
+			Tom(A, B, C, F, nX, 0, teta[i], nX);
+		}
+
+		//прогонка по X 2 область для температуры
+		for (int i = i1; i < i2; i++) {
+			A[0] = 0.0;
+			B[0] = 1.0;
+			C[0] = 0.0;
+			F[0] = teta[i][j1];
+
+			for (int j = j1 + 1; j < nX; j++) {
+				A[j - j1] = -dt * (abs(speedX[i][j]) + speedX[i][j]) / (2.0 * hx) - dt / (Re * Pr * pow(hx, 2));
+				B[j - j1] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * Pr * pow(hx, 2));
+				C[j - j1] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * Pr * pow(hx, 2));
+				F[j - j1] = teta[i][j];
+			}
+
+			A[nX - j1] = -1.0;
+			B[nX - j1] = 1.0;
+			C[nX - j1] = 0.0;
+			F[nX - j1] = 0.0;
+
+			Tom(A, B, C, F, nX - j1, j1, teta[i], nX);
+		}
+
+		//прогонка по X 3 область для температуры
+		for (int i = i2; i < nY; i++) {
+			A[0] = 0.0;
+			B[0] = 1.0;
+			C[0] = 0.0;
+			F[0] = 0.0;
+
+			for (int j = 1; j < nX; j++) {
+				A[j] = -dt * (abs(speedX[i][j]) + speedX[i][j]) / (2.0 * hx) - dt / (Re * Pr * pow(hx, 2));
+				B[j] = 1.0 + dt * abs(speedX[i][j]) / hx + 2.0 * dt / (Re * Pr * pow(hx, 2));
+				C[j] = -dt * (abs(speedX[i][j]) - speedX[i][j]) / (2.0 * hx) - dt / (Re * Pr * pow(hx, 2));
+				F[j] = teta[i][j];
+			}
+
+			A[nX] = -1.0;
+			B[nX] = 1.0;
+			C[nX] = 0.0;
+			F[nX] = 0.0;
+
+			Tom(A, B, C, F, nX, 0, teta[i], nX);
+		}
+
+		//прогонка по Y 1 область для температуры
+		for (int j = 1; j <= j1; j++) {
+
+
+			for (int k = 0; k <= nY; k++) {
+				e[k] = teta[k][j];
+			}
+
+			A[0] = 0.0;
+			B[0] = -1.0;
+			C[0] = 1.0;
+			F[0] = 0.0;
+
+			for (int i = 1; i < i1; i++) {
+				A[i] = -dt * (abs(speedY[i][j]) + speedY[i][j]) / (2.0 * hy) - dt / (Re * Pr * pow(hy, 2));
+				B[i] = 1.0 + dt * abs(speedY[i][j]) / hy + 2.0 * dt / (Re * Pr * pow(hy, 2));
+				C[i] = -dt * (abs(speedY[i][j]) - speedY[i][j]) / (2.0 * hy) - dt / (Re * Pr * pow(hy, 2));
+				F[i] = teta[i][j];
+			}
+
+			A[i1] = 0.0;
+			B[i1] = 1.0;
+			C[i1] = 0.0;
+			F[i1] = teta[i1][j];
+
+			Tom(A, B, C, F, i1, 0, e, i1);
+
+			//прогонка по Y 2 область для температуры
+			A[0] = 0.0;
+			B[0] = 1.0;
+			C[0] = 0.0;
+			F[0] = teta[i2 - 1][j];
+
+			for (int i = i2; i < nY; i++) {
+				A[i - i2 + 1] = -dt * (abs(speedY[i][j]) + speedY[i][j]) / (2.0 * hy) - dt / (Re * Pr * pow(hy, 2));
+				B[i - i2 + 1] = 1.0 + dt * abs(speedY[i][j]) / hy + 2.0 * dt / (Re * Pr * pow(hy, 2));
+				C[i - i2 + 1] = -dt * (abs(speedY[i][j]) - speedY[i][j]) / (2.0 * hy) - dt / (Re * Pr * pow(hy, 2));
+				F[i - i2 + 1] = teta[i][j];
+			}
+
+			A[nY - i2 + 1] = -1.0;
+			B[nY - i2 + 1] = 1.0;
+			C[nY - i2 + 1] = 0.0;
+			F[nY - i2 + 1] = 0.0;
+
+			Tom(A, B, C, F, nY - i2 + 1, i2 - 1, e, nY);
+
+			for (int k = 0; k <= nY; k++) {
+				omega[k][j] = e[k];
+			}
+		}
+
+		//прогонка по Y 3 область для температуры
+		for (int j = j1 + 1; j < nX; j++) {
+
+			A[0] = 0.0;
+			B[0] = -1.0;
+			C[0] = 1.0;
+			F[0] = 0.0;
+
+			for (int i = 1; i < nY; i++) {
+				A[i] = -dt * (abs(speedY[i][j]) + speedY[i][j]) / (2.0 * hy) - dt / (Re * Pr * pow(hy, 2));
+				B[i] = 1.0 + dt * abs(speedY[i][j]) / hy + 2.0 * dt / (Re * Pr * pow(hy, 2));
+				C[i] = -dt * (abs(speedY[i][j]) - speedY[i][j]) / (2.0 * hy) - dt / (Re * Pr * pow(hy, 2));
+				F[i] = teta[i][j];
+			}
+
+			A[nY] = -1.0;
+			B[nY] = 1.0;
+			C[nY] = 0.0;
+			F[nY] = 0.0;
+
+			Tom(A, B, C, F, nY, 0, e, nY);
+
+			for (int k = 0; k <= nY; k++) {
+				teta[k][j] = e[k];
+			}
+		}
+
+		delete[] e;
+
+		for (int i = 0; i <= nY; i++) {
+			teta[i][0] = teta[i][1];
+			teta[i][nY] = teta[i][nY - 1];
+		}
+
+		for (int j = 1; j < nX; j++) {
+			teta[0][j] = teta[1][j];
+			teta[nY][j] = teta[nY - 1][j];
+		}
+
+		double** temp_psi = getArray(nY + 1, nX + 1);
+		double** temp_omega = getArray(nY + 1, nX + 1);
+		double** temp_teta = getArray(nY + 1, nX + 1);
+		for (int i = 0; i <= nY; i++) {
+			for (int j = 0; j <= nX; j++) {
+				temp_psi[i][j] = abs(psi_n[i][j] - psi[i][j]);
+				temp_omega[i][j] = abs(omega_n[i][j] - omega[i][j]);
+				temp_teta[i][j] = abs(teta_n[i][j] - teta[i][j]);
+			}
+		}
+		double eps = 0.00001;
+		double maximum = std::max(getMax(temp_psi, nY + 1, nX + 1), std::max(getMax(temp_omega, nY + 1, nX + 1), getMax(temp_teta, nY + 1, nX + 1)));
+		if (maximum < eps) {
+			break;
+		}
+		cout << maximum << endl;
+		deleteArray(temp_psi, nY + 1);
+		deleteArray(temp_teta, nY + 1);
+		deleteArray(temp_omega, nY + 1);
 	}
 	delete[] A;
 	delete[] B;
 	delete[] C;
 	delete[] F;
-	for (int i = nY; i >= 0; i--) {
-		if (i % 1 == 0) {
-			for (int j = 0; j <= nX; j++) {
-				if (j % 1 == 0)
-					cout << setprecision(3) << fixed << setw(3) << psi[i][j] << "   ";
-			}
-			cout << endl;
-		}
-	}cin.get();
 
-	cout << "finish \n";
+
+	//for (int i = nY; i >= 0; i--) {
+	//	if (i % 1 == 0) {
+	//		for (int j = 0; j <= nX; j++) {
+	//			if (j % 1 == 0)
+	//				cout << setprecision(3) << fixed << setw(3) << teta[i][j] << "   ";
+	//		}
+	//		cout << endl;
+	//	}
+	//}cin.get();
 
 	for (int i = nY; i >= 0; i--) {
 		for (int j = 0; j <= nX; j++) {
@@ -481,6 +671,8 @@ int main()
 		}
 	}
 	deleteArray(psi, nY + 1);
+	deleteArray(teta, nY + 1);
+	deleteArray(omega, nY + 1);
 	out.close();
 
 	ofstream f1("D:\\speedX.dat");
@@ -537,15 +729,15 @@ bool deleteArray(double**& arr, int nY)
 	}
 }
 
-void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, double xBarrierLenght, double yDistancesToBarrierDown, double yDistancesToBarrierUp, double xDistancesToBarrier, double** speedX, double** speedY)
+void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, double xBarrierLenght, double yDistancesToBarrierDown, double yDistancesToBarrierUp, double xDistancesToBarrier, double** speedX, double** speedY, double** teta)
 {
 	/** Граничные условия **/
-	//на левой границе
-	double Ux = 1.0, Uy = 0.0;
+	double Ux = 1.0, Uy = 0.0, tetaB = 2.0;
 
 	//граничные условия на нижней границе
 	for (int j = 0; j < nX; j++) {
 		arr[0][j] = 0.0;
+		teta[0][j] = 0.0;
 	}
 
 	//граничные условия на левой границе
@@ -556,13 +748,18 @@ void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, dou
 			nXStart = static_cast<int>(xDistancesToBarrier / hx);
 
 			arr[i][nXStart] = i * hy * Ux;
+
+			teta[i][nXStart] = 0.0;
 		}
 		if (i * hy >= yDistancesToBarrierDown && i * hy <= yDistancesToBarrierUp) {
 			nXStart = static_cast<int>((xDistancesToBarrier + xBarrierLenght) / hx);
 			arr[i][nXStart] = yDistancesToBarrierDown * Ux;
+			teta[i][nXStart] = tetaB;
 			if (abs(i * hy - yDistancesToBarrierDown) < 0.0000001 || abs(i * hy - yDistancesToBarrierUp) < 0.0000001) {
 				for (int j = 0; j <= nXStart; j++) {
 					arr[i][j] = yDistancesToBarrierDown * Ux;
+
+					teta[i][j] = tetaB;
 				}
 			}
 		}
@@ -570,17 +767,21 @@ void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, dou
 			nXStart = static_cast<int>(xDistancesToBarrier / hx);
 
 			arr[i][nXStart] = Ux * (i * hy - yDistancesToBarrierUp) + Ux * yDistancesToBarrierDown;
+
+			teta[i][nXStart] = 0.0;
 		}
 	}
 
 	//граничные условия на верхней границе
 	for (int j = 1; j < nX; j++) {
 		arr[nY - 1][j] = arr[nY - 1][0];
+		teta[nY - 1][j] = 0.0;
 	}
 
 	//граничные условия на правой границе
-	for (int i = nY - 2; i > 1; i--) {
+	for (int i = nY - 2; i >= 1; i--) {
 		arr[i][nX - 1] = 0.0;
+		teta[i][nX - 1] = 0.0;
 	}
 
 	//граничные условия для скорости на нижней границе
@@ -605,4 +806,17 @@ void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, dou
 		speedX[i][nX - 1] = 0.0;
 		speedY[i][nX - 1] = 0.0;
 	}
+}
+
+double getMax(double** arr, int nY, int nX)
+{
+	double max = 0.0;
+	for (int i = 0; i < nY; i++) {
+		for (int j = 0; j < nX; j++) {
+			if (max < arr[i][j]) {
+				max = arr[i][j];
+			}
+		}
+	}
+	return max;
 }
