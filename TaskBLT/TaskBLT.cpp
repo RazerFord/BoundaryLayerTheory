@@ -37,7 +37,10 @@ int main()
 
 	/** Объект **/
 	//размеры образца по x, y
-	double xLenght = 3.0, yLenght = 3.0;
+	double xLenght = (mp["xLenght"]) ? mp["xLenght"] : 3.0,
+		yLenght = (mp["yLenght"]) ? mp["yLenght"] : 3.0;
+	cout << "xLenght: " << xLenght << endl;
+	cout << "yLenght: " << yLenght << endl;
 	//количество областей по x
 	const int n = 3;
 	//количество областей по y
@@ -49,32 +52,43 @@ int main()
 
 	/** Препятствие **/
 	//размеры препятствия по x, y
-	double xBarrierLenght = 1.0, yBarrierLenght = 1.0;
+	double xBarrierLenght = (mp["xBarrierLenght"]) ? mp["xBarrierLenght"] : 1.0,
+		yBarrierLenght = (mp["yBarrierLenght"]) ? mp["yBarrierLenght"] : 1.0;
+
+
 	//расстояние от препятствия от точки (0,0) /Это левый нижний угол/ по ОСИ X
 	double xDistancesToBarrier = 0.0;
 	//расстояние от препятствия от точки (0,0) /Это левый нижний угол/ по ОСИ Y
-	double yDistancesToBarrierDown = 1.0;
-	double yDistancesToBarrierUp = yBarrierLenght + yDistancesToBarrierDown;
+	double yDistancesToBarrierDown = (mp["yDistancesToBarrierDown"]) ? mp["yDistancesToBarrierDown"] : 1.0;
+
+
 
 	double hx = xLenght / nX;
-	int testX = static_cast<int>(xBarrierLenght / hx);
+
+	/*int testX = static_cast<int>(xBarrierLenght / hx);
 	while (true) {
 		if (!(abs((testX * hx) - xBarrierLenght) > 0.0000001))
 			break;
 		nX++;
 		hx = xLenght / nX;
 		testX = static_cast<int>(xBarrierLenght / hx);
-	}
+	}*/
 	double hy = yLenght / nY;
-	int testY = static_cast<int>(yBarrierLenght / hy);
+	/*int testY = static_cast<int>(yBarrierLenght / hy);
 	while (true) {
 		if (!(abs(testY * hy - yBarrierLenght) > 0.0000001))
 			break;
 		nY++;
 		hy = yLenght / nY;
 		testY = static_cast<int>(xBarrierLenght / hy);
-	}
-
+	}*/
+	yDistancesToBarrierDown = static_cast<int>(yDistancesToBarrierDown / hy) * hy;
+	xBarrierLenght = static_cast<int>(xBarrierLenght / hx) * hx;
+	yBarrierLenght = static_cast<int>(yBarrierLenght / hy) * hy;
+	double yDistancesToBarrierUp = yBarrierLenght + yDistancesToBarrierDown;
+	cout << "xBarrierLenght: " << xBarrierLenght << endl;
+	cout << "yBarrierLenght: " << yBarrierLenght << endl;
+	cout << "yDistancesToBarrierDown: " << yDistancesToBarrierDown << endl;
 	cout << "Количество точек по X: " << nX << endl;
 	cout << "Количество точек по Y: " << nY << endl;
 
@@ -100,7 +114,7 @@ int main()
 	if (mp["web"] == 1)
 		for (int i = nY; i >= 0; i--) {
 			for (int j = 0; j <= nX; j++) {
-				cout << teta[i][j] << "   \t";
+				cout << psi[i][j] << "   \t";
 			}
 			cout << endl;
 		}
@@ -121,7 +135,7 @@ int main()
 	double* B = new double[max + 1];
 	double* C = new double[max + 1];
 	double* F = new double[max + 1];
-	while (timer < 10) {
+	while (timer < 15) {
 		timer = dt * k++;
 		cout << "Итерация: " << k << "; Время: " << timer << "; Точность: ";
 
@@ -483,6 +497,7 @@ int main()
 		}
 
 		if (mp["teta"] == 1) {
+
 			//прогонка по X 1 область для температуры
 			for (int i = 1; i < i1; i++) {
 				A[0] = 0.0;
@@ -650,7 +665,7 @@ int main()
 				temp_teta[i][j] = abs(teta_n[i][j] - teta[i][j]);
 			}
 		}
-		double eps = 0.00001;
+		double eps = 0.0001;
 		double maximum = std::max(getMax(temp_psi, nY + 1, nX + 1), std::max(getMax(temp_omega, nY + 1, nX + 1), getMax(temp_teta, nY + 1, nX + 1)));
 		cout << maximum << endl;
 		if (maximum < eps) {
@@ -710,6 +725,11 @@ int main()
 	deleteArray(psi, nY + 1);
 	deleteArray(teta, nY + 1);
 	deleteArray(omega, nY + 1);
+
+	cout << "xBarrierLenght: " << xBarrierLenght << endl;
+	cout << "yBarrierLenght: " << yBarrierLenght << endl;
+	cout << "yDistancesToBarrierDown: " << yDistancesToBarrierDown << endl;
+
 	cin.get();
 	return 0;
 }
@@ -782,11 +802,12 @@ void borderConditionsPsi(double** arr, int nY, int nX, double hy, double hx, dou
 
 			teta[i][nXStart] = 0.0;
 		}
-		if (i * hy >= yDistancesToBarrierDown && i * hy <= yDistancesToBarrierUp) {
+		if (static_cast<int>((i * hy) * 100) >= static_cast<int>(yDistancesToBarrierDown * 100) && static_cast<int>((i * hy) * 100) <= static_cast<int>(yDistancesToBarrierUp * 100)) {
 			nXStart = static_cast<int>((xDistancesToBarrier + xBarrierLenght) / hx);
 			arr[i][nXStart] = yDistancesToBarrierDown * Ux;
 			teta[i][nXStart] = tetaB;
-			if (abs(i * hy - yDistancesToBarrierDown) < 0.0000001 || abs(i * hy - yDistancesToBarrierUp) < 0.0000001) {
+
+			if (abs(i * hy - yDistancesToBarrierDown) < 0.000001 || abs(i * hy - yDistancesToBarrierUp) < 0.000001) {
 				for (int j = 0; j <= nXStart; j++) {
 					arr[i][j] = yDistancesToBarrierDown * Ux;
 
