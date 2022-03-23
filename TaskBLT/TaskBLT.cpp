@@ -60,28 +60,8 @@ int main()
 	double xDistancesToBarrier = 0.0;
 	//расстояние от препятствия от точки (0,0) /Это левый нижний угол/ по ОСИ Y
 	double yDistancesToBarrierDown = (mp["yDistancesToBarrierDown"]) ? mp["yDistancesToBarrierDown"] : 1.0;
-
-
-
 	double hx = xLenght / nX;
-
-	/*int testX = static_cast<int>(xBarrierLenght / hx);
-	while (true) {
-		if (!(abs((testX * hx) - xBarrierLenght) > 0.0000001))
-			break;
-		nX++;
-		hx = xLenght / nX;
-		testX = static_cast<int>(xBarrierLenght / hx);
-	}*/
 	double hy = yLenght / nY;
-	/*int testY = static_cast<int>(yBarrierLenght / hy);
-	while (true) {
-		if (!(abs(testY * hy - yBarrierLenght) > 0.0000001))
-			break;
-		nY++;
-		hy = yLenght / nY;
-		testY = static_cast<int>(xBarrierLenght / hy);
-	}*/
 	yDistancesToBarrierDown = static_cast<int>(yDistancesToBarrierDown / hy) * hy;
 	xBarrierLenght = static_cast<int>(xBarrierLenght / hx) * hx;
 	yBarrierLenght = static_cast<int>(yBarrierLenght / hy) * hy;
@@ -92,6 +72,10 @@ int main()
 	cout << "Количество точек по X: " << nX << endl;
 	cout << "Количество точек по Y: " << nY << endl;
 
+	double timerEnd = (mp["timerEnd"]) ? mp["timerEnd"] : 15.0;
+	//шаг по времени
+	double dt = (mp["dt"]) ? mp["dt"] : 0.001;
+	cout << "dt: " << dt << "; timerEnd: " << timerEnd << endl;
 	double** psi = getArray(nY + 1, nX + 1);
 	double** omega = getArray(nY + 1, nX + 1);
 	double** teta = getArray(nY + 1, nX + 1);
@@ -102,9 +86,6 @@ int main()
 	double** omega_n = getArray(nY + 1, nX + 1);
 	double** teta_n = getArray(nY + 1, nX + 1);
 
-
-	//шаг по времени
-	const double dt = 0.001;
 	//шаг по x
 	hx = xLenght / nX;
 	//шаг по y
@@ -135,7 +116,7 @@ int main()
 	double* B = new double[max + 1];
 	double* C = new double[max + 1];
 	double* F = new double[max + 1];
-	while (timer < 15) {
+	while (timer < timerEnd) {
 		timer = dt * k++;
 		cout << "Итерация: " << k << "; Время: " << timer << "; Точность: ";
 
@@ -309,20 +290,6 @@ int main()
 			speedX[i][nX] = speedX[i][nX - 1];
 		}
 
-		//for (int i = i1; i < i2; i++) {
-		//	for (int j = j1 + 1; j < nX; j++) {
-		//		speedX[i][j] = (psi[i + 1][j] - psi[i][j]) / hy;
-		//	}
-		//	speedX[i][nX] = speedX[i][nX - 1];
-		//}
-
-		//for (int i = i2; i < nY; i++) {
-		//	for (int j = 1; j < nX; j++) {
-		//		speedX[i][j] = (psi[i + 1][j] - psi[i][j]) / hy;
-		//	}
-		//	speedX[i][nX] = speedX[i][nX - 1];
-		//}
-
 		//Вычисления скорости по Y
 		for (int i = 1; i < nY; i++) {
 			for (int j = 1; j < nX; j++) {
@@ -330,20 +297,6 @@ int main()
 			}
 			speedY[i][nX] = speedY[i][nX - 1];
 		}
-
-		//for (int i = i1; i < i2; i++) {
-		//	for (int j = j1; j < nX; j++) {
-		//		speedY[i][j] = -(psi[i][j + 1] - psi[i][j]) / hx;
-		//	}
-		//	speedY[i][nX] = speedY[i][nX - 1];
-		//}
-
-		//for (int i = i2 - 1; i < nY; i++) {
-		//	for (int j = 0; j < nX; j++) {
-		//		speedY[i][j] = -(psi[i][j + 1] - psi[i][j]) / hx;
-		//	}
-		//	speedY[i][nX] = speedY[i][nX - 1];
-		//	}
 
 		if (mp["omega"] == 1) {
 			//прогонка по X 1 область для вихрей
@@ -665,7 +618,7 @@ int main()
 				temp_teta[i][j] = abs(teta_n[i][j] - teta[i][j]);
 			}
 		}
-		double eps = 0.0001;
+		double eps = 0.00001;
 		double maximum = std::max(getMax(temp_psi, nY + 1, nX + 1), std::max(getMax(temp_omega, nY + 1, nX + 1), getMax(temp_teta, nY + 1, nX + 1)));
 		cout << maximum << endl;
 		if (maximum < eps) {
